@@ -1,0 +1,47 @@
+# Kustomize configuration for managing Kubernetes manifests
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ticketing
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - hpa.yaml
+  - pdb.yaml
+  - servicemonitor.yaml
+  - networkpolicy.yaml
+
+# Common Labels
+commonLabels:
+  app.kubernetes.io/name: ticketing-service
+  app.kubernetes.io/component: backend
+  app.kubernetes.io/part-of: ticketing-platform
+
+# Common Annotations
+commonAnnotations:
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/version: "1.0.0"
+
+# Images (to override in different environments)
+images:
+  - name: ticketing-service
+    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/ticketing-service
+    newTag: latest
+
+# ConfigMap Generator (alternative to configmap.yaml)
+# configMapGenerator:
+# - name: ticketing-config
+#   literals:
+#   - SPRING_PROFILES_ACTIVE=prod
+
+# Secret Generator (alternative to secret.yaml)
+# secretGenerator:
+# - name: ticketing-secrets
+#   literals:
+#   - DB_PASSWORD=secret123
+

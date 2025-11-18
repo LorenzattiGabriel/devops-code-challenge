@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-app
+  namespace: ticketing
+  labels:
+    app: ticketing-service
+    version: v1
+spec:
+  replicas: 3  # Minimum 3 for high availability
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Maximum 1 extra pod during update
+      maxUnavailable: 0  # Always maintain at least 3 pods running
+  selector:
+    matchLabels:
+      app: ticketing-service
+  template:
+    metadata:
+      labels:
+        app: ticketing-service
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
+    spec:
+      # Security Context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      # Init Container to wait for dependencies
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z $DB_HOST $DB_PORT; do echo waiting for database; sleep 2; done;']
+        envFrom:
+        - configMapRef:
+            name: ticketing-config
+      
+      - name: wait-for-redis
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z $REDIS_HOST $REDIS_PORT; do echo waiting for redis; sleep 2; done;']
+        envFrom:
+        - configMapRef:
+            name: ticketing-config
+      
+      # Main Application Container
+      containers:
+      - name: ticketing-app
+        image: <AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/ticketing-service:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        
+        # Environment Variables from ConfigMap and Secret
+        envFrom:
+        - configMapRef:
+            name: ticketing-config
+        - secretRef:
+            name: ticketing-secrets
+        
+        # Resource Limits and Requests
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"      # 0.25 CPU
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"     # 1 CPU
+        
+        # Liveness Probe (restarts pod if it fails)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 60  # Wait 60s after start
+          periodSeconds: 10        # Check every 10s
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3      # Restart after 3 failures
+        
+        # Readiness Probe (removes from load balancer if it fails)
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        
+        # Startup Probe (for applications with slow startup)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 12     # 12 x 10s = 120s max startup time
+        
+        # Container Security Context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Spring Boot needs to write temp files
+          capabilities:
+            drop:
+            - ALL
+        
+        # Volume Mounts (if needed)
+        # volumeMounts:
+        # - name: tmp
+        #   mountPath: /tmp
+      
+      # Volumes
+      # volumes:
+      # - name: tmp
+      #   emptyDir: {}
+      
+      # Affinity (distribute pods across different nodes)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - ticketing-service
+              topologyKey: kubernetes.io/hostname
+      
+      # Tolerations (if using node taints)
+      # tolerations:
+      # - key: "app"
+      #   operator: "Equal"
+      #   value: "ticketing"
+      #   effect: "NoSchedule"
+

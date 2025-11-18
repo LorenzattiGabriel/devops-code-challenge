@@ -1,0 +1,22 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ticketing-pdb
+  namespace: ticketing
+  labels:
+    app: ticketing-service
+spec:
+  minAvailable: 2  # Always maintain at least 2 pods available
+  selector:
+    matchLabels:
+      app: ticketing-service
+  
+  # Alternative: use maxUnavailable
+  # maxUnavailable: 1  # Maximum 1 pod can be unavailable during disruptions
+
+# PodDisruptionBudget ensures high availability during:
+# - Node drains
+# - Cluster upgrades
+# - Pod evictions
+# - Rolling updates
+

@@ -1,0 +1,26 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+*.md
+
+# Logs
+*.log
+setup-log.txt
+
+# Build artifacts
+# Note: Dockerfile uses pre-built JARs (includes target/)
+# Note: Dockerfile.production builds from source (excludes target/)
+target/**
+!target/*.jar

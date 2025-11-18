@@ -1,0 +1,75 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ticketing-network-policy
+  namespace: ticketing
+spec:
+  podSelector:
+    matchLabels:
+      app: ticketing-service
+  
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Ingress Rules (incoming traffic)
+  ingress:
+  # Allow traffic from Ingress Controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx  # Or kube-system if using AWS Load Balancer Controller
+    ports:
+    - protocol: TCP
+      port: 8080
+  
+  # Allow traffic from Prometheus (monitoring)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+  
+  # Allow traffic between pods of the same app (optional)
+  - from:
+    - podSelector:
+        matchLabels:
+          app: ticketing-service
+    ports:
+    - protocol: TCP
+      port: 8080
+  
+  # Egress Rules (outgoing traffic)
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  
+  # Allow traffic to RDS (MySQL)
+  - to:
+    - podSelector: {}  # Any pod (RDS is outside the cluster)
+    ports:
+    - protocol: TCP
+      port: 3306
+  
+  # Allow traffic to ElastiCache (Redis)
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 6379
+  
+  # Allow HTTPS for external integrations
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 443
+

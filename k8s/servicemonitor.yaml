@@ -1,0 +1,103 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ticketing-metrics
+  namespace: ticketing
+  labels:
+    app: ticketing-service
+    release: prometheus  # Label para que Prometheus Operator lo detecte
+spec:
+  selector:
+    matchLabels:
+      app: ticketing-service
+  
+  endpoints:
+  - port: http
+    path: /actuator/prometheus
+    interval: 30s
+    scrapeTimeout: 10s
+    
+    # Relabeling for cleaner metrics
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: node
+    - sourceLabels: [__meta_kubernetes_namespace]
+      targetLabel: namespace
+
+---
+# PrometheusRule para alertas
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ticketing-alerts
+  namespace: ticketing
+  labels:
+    app: ticketing-service
+    prometheus: kube-prometheus
+spec:
+  groups:
+  - name: ticketing.rules
+    interval: 30s
+    rules:
+    # Alert: High Error Rate
+    - alert: HighErrorRate
+      expr: |
+        rate(http_server_requests_seconds_count{status=~"5..", namespace="ticketing"}[5m]) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "High error rate detected"
+        description: "{{ $labels.pod }} has error rate above 5% (current: {{ $value }})"
+    
+    # Alert: High Response Time
+    - alert: HighResponseTime
+      expr: |
+        histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{namespace="ticketing"}[5m])) > 1
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "High response time (p95 > 1s)"
+        description: "{{ $labels.pod }} p95 latency: {{ $value }}s"
+    
+    # Alert: Pod Down
+    - alert: TicketingPodDown
+      expr: |
+        up{job="ticketing-service"} == 0
+      for: 2m
+      labels:
+        severity: critical
+        team: backend
+      annotations:
+        summary: "Ticketing pod is down"
+        description: "{{ $labels.pod }} has been down for more than 2 minutes"
+    
+    # Alert: High Memory Usage
+    - alert: HighMemoryUsage
+      expr: |
+        container_memory_usage_bytes{pod=~"ticketing-app-.*"} / container_spec_memory_limit_bytes{pod=~"ticketing-app-.*"} > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "High memory usage (>90%)"
+        description: "{{ $labels.pod }} memory usage: {{ $value | humanizePercentage }}"
+    
+    # Alert: High CPU Usage
+    - alert: HighCPUUsage
+      expr: |
+        rate(container_cpu_usage_seconds_total{pod=~"ticketing-app-.*"}[5m]) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        team: backend
+      annotations:
+        summary: "High CPU usage (>80%)"
+        description: "{{ $labels.pod }} CPU usage: {{ $value | humanizePercentage }}"
+
