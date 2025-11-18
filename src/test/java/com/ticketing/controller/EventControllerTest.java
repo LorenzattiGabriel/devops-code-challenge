@@ -6,7 +6,6 @@ import com.ticketing.exception.ResourceNotFoundException;
 import com.ticketing.model.Event;
 import com.ticketing.service.EventService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -48,7 +47,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/events should return all events")
     void getAllEvents_ShouldReturnListOfEvents() throws Exception {
         // Given
         List<Event> events = Arrays.asList(testEvent);
@@ -67,7 +65,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/events/{id} should return event when exists")
     void getEvent_WhenExists_ShouldReturnEvent() throws Exception {
         // Given
         when(eventService.getEventById(1L)).thenReturn(testEvent);
@@ -83,7 +80,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/events/{id} should return 404 when not found")
     void getEvent_WhenNotExists_ShouldReturn404() throws Exception {
         // Given
         when(eventService.getEventById(999L))
@@ -99,7 +95,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/events/{id} should return 400 for invalid ID")
     void getEvent_WithInvalidId_ShouldReturn400() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/events/-1"))
@@ -110,7 +105,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/events should create event successfully")
     void createEvent_WithValidData_ShouldReturnCreated() throws Exception {
         // Given
         Event request = new Event("New Concert", "New Venue", LocalDateTime.of(2026, 1, 15, 20, 0), 500);
@@ -133,7 +127,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/events should return 400 for invalid data")
     void createEvent_WithInvalidData_ShouldReturn400() throws Exception {
         // Given - Empty name (violates @NotBlank and @Size validations)
         Event request = new Event("", "Venue", LocalDateTime.of(2026, 1, 15, 20, 0), 100);
@@ -150,7 +143,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/events should return 400 for past date")
     void createEvent_WithPastDate_ShouldReturn400() throws Exception {
         // Given - Past date (violates @Future validation)
         Event request = new Event("Concert", "Venue", LocalDateTime.of(2020, 1, 1, 20, 0), 100);
@@ -167,7 +159,6 @@ class EventControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/events/available should return events with tickets")
     void getEventsWithAvailableTickets_ShouldReturnFilteredEvents() throws Exception {
         // Given
         List<Event> events = Arrays.asList(testEvent);

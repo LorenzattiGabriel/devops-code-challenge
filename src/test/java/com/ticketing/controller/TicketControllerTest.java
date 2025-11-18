@@ -53,7 +53,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/event/{eventId} should return available tickets")
     void getAvailableTickets_WhenTicketsExist_ShouldReturnList() throws Exception {
         // Given
         List<Ticket> tickets = Arrays.asList(testTicket);
@@ -70,7 +69,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/event/{eventId} should return 404 when event not found")
     void getAvailableTickets_WhenEventNotFound_ShouldReturn404() throws Exception {
         // Given
         when(ticketService.getAvailableTickets(999L))
@@ -86,7 +84,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/event/{eventId} should return 400 for invalid ID")
     void getAvailableTickets_WithInvalidId_ShouldReturn400() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/tickets/event/-1"))
@@ -98,7 +95,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/tickets/reserve should reserve ticket successfully")
     void reserveTicket_WithValidData_ShouldReturnCreated() throws Exception {
         // Given
         Ticket reservedTicket = new Ticket(testEvent, "RESERVED");
@@ -122,7 +118,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/tickets/reserve should return 409 when no tickets available")
     void reserveTicket_WhenNoTickets_ShouldReturn409() throws Exception {
         // Given
         when(ticketService.reserveTicket(1L, "customer@example.com"))
@@ -140,7 +135,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/tickets/reserve should return 400 for invalid email")
     void reserveTicket_WithInvalidEmail_ShouldReturn400() throws Exception {
         // When & Then
         mockMvc.perform(post("/api/v1/tickets/reserve")
@@ -154,7 +148,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("POST /api/tickets/reserve should return 400 for null eventId")
     void reserveTicket_WithNullEventId_ShouldReturn400() throws Exception {
     
         mockMvc.perform(post("/api/v1/tickets/reserve")
@@ -165,7 +158,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/customer/{email} should return customer tickets")
     void getCustomerTickets_WithValidEmail_ShouldReturnTickets() throws Exception {
         // Given
         Ticket ticket1 = new Ticket(testEvent, "RESERVED");
@@ -191,7 +183,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/customer/{email} should return empty list when no tickets")
     void getCustomerTickets_WhenNoTickets_ShouldReturnEmptyList() throws Exception {
         // Given
         when(ticketService.getCustomerTickets("notickets@example.com")).thenReturn(List.of());
@@ -205,7 +196,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/customer/{email} should return 400 for invalid email")
     void getCustomerTickets_WithInvalidEmail_ShouldReturn400() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/tickets/customer/invalid-email"))
@@ -217,7 +207,6 @@ class TicketControllerTest {
     }
     
     @Test
-    @DisplayName("GET /api/tickets/customer/{email} should return 400 for blank email")
     void getCustomerTickets_WithBlankEmail_ShouldReturn400() throws Exception {
         // When & Then
         mockMvc.perform(get("/api/v1/tickets/customer/ "))
