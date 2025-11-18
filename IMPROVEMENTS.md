@@ -1,6 +1,6 @@
 # Technical Improvements Roadmap
 
-### 1. Database Migrations (Liquibase)
+###  Database Migrations (Liquibase)
 
 **Current State:**
 ```properties
@@ -23,7 +23,7 @@ spring.jpa.hibernate.ddl-auto=update  # ⚠️ DANGEROUS in production
 
 ---
 
-### 2. Authentication & Authorization
+### Authentication & Authorization
 
 **Current State:**
 ```java
@@ -46,7 +46,7 @@ spring.jpa.hibernate.ddl-auto=update  # ⚠️ DANGEROUS in production
 - ✅ Prevent abuse
 
 
-### 3. Scheduled Tasks Thread Pool
+### Scheduled Tasks Thread Pool
 
 **Current State:**
 ```java
@@ -76,7 +76,7 @@ Or ThreadPoolTaskScheduler
 - ✅ No blocking between tasks
 
 
-### 4. HikariCP Connection Pool Tuning
+###  HikariCP Connection Pool Tuning
 use example 
 
 spring.datasource.hikari.maximum-pool-size=20
@@ -109,7 +109,7 @@ connections = ((core_count * 2) + effective_spindle_count)
 ---
 
 
-### 8. Thread Pool Monitoring
+### Thread Pool Monitoring
 
 **Current State:**
 - No visibility into thread pool health
